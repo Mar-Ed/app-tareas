@@ -38,4 +38,11 @@
             app:popEnterAnim="@anim/nav_default_pop_enter_anim"
             app:popExitAnim="@anim/nav_default_pop_exit_anim" />
     </fragment>
+    <!-- Pantalla de estadísticas: Métricas y tareas con coordenadas GPS -->
+    <fragment
+        android:id="@+id/StatsFragment"
+        android:name="com.example.organizadordetareas.StatsFragment"
+        android:label="Estadísticas"
+        tools:layout="@layout/fragment_stats" />
+
 </navigation>

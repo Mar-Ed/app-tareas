@@ -42,12 +42,13 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:layout_marginEnd="8dp"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:textColor="?attr/colorOnSurface"
             android:textStyle="bold"
             app:layout_constraintTop_toBottomOf="@id/text_categoria"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/check_completada"
             tools:text="Reunión de Sincronización" />
 
         <!-- Descripción de la tarea -->
@@ -56,14 +57,25 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
+            android:layout_marginEnd="8dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:ellipsize="end"
             android:maxLines="3"
             app:layout_constraintTop_toBottomOf="@id/text_titulo"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/check_completada"
             tools:text="Revisar el estado de las tareas de la semana y planificar los próximos sprints con el equipo de diseño y desarrollo." />
+
+        <!-- CheckBox de Tarea Completada -->
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/check_completada"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:contentDescription="Marcar tarea como completada" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

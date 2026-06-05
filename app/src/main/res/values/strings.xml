@@ -18,6 +18,7 @@
     <string name="action_settings">Configuración</string>
     <string name="next">Siguiente</string>
     <string name="previous">Anterior</string>
+    <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</string>
 
     <!-- Estado vacío de la lista -->
     <string name="empty_task_list">No tienes tareas aún.\n¡Agrega una con el botón +!</string>
@@ -47,4 +48,16 @@
 
     <!-- Intent share -->
     <string name="share_chooser_title">Compartir tarea</string>
+
+    <!-- Nuevos elementos de UI -->
+    <string name="label_prioridad_rapida">Prioridad rápida (Scroll Horizontal):</string>
+    <string name="prio_baja">Baja</string>
+    <string name="prio_media">Media</string>
+    <string name="prio_alta">Alta</string>
+    <string name="prio_urgente">Urgente</string>
+    <string name="prio_critica">Crítica</string>
+    <string name="label_sugerencias">Sugerencias rápidas (ListView):</string>
+    <string name="btn_obtener_ubicacion">Guardar Ubicación Actual</string>
+    <string name="label_ubicacion_gps">Ubicación GPS</string>
+    <string name="sin_ubicacion">Sin ubicación capturada</string>
 </resources>

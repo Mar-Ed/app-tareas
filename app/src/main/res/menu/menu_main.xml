@@ -7,4 +7,14 @@
         android:orderInCategory="100"
         android:title="@string/action_settings"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_start_sync"
+        android:orderInCategory="101"
+        android:title="Iniciar Sincronización"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_stop_sync"
+        android:orderInCategory="102"
+        android:title="Detener Sincronización"
+        app:showAsAction="never" />
 </menu>

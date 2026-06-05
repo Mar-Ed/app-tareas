@@ -13,6 +13,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import android.view.Menu
 import android.view.MenuItem
+import android.content.Intent
 import com.example.organizadordetareas.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -55,11 +56,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+        // Manejador de clics en el menú de la barra de acciones
         return when (item.itemId) {
             R.id.action_settings -> true
+            R.id.action_start_sync -> {
+                val intent = Intent(this, SyncService::class.java)
+                startService(intent)
+                true
+            }
+            R.id.action_stop_sync -> {
+                val intent = Intent(this, SyncService::class.java)
+                stopService(intent)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }

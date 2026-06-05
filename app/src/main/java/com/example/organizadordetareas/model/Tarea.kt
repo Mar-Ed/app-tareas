@@ -13,5 +13,8 @@ data class Tarea(
     val titulo: String,
     val descripcion: String,
     val categoria: String,
-    val esUrgente: Boolean = false
+    val esUrgente: Boolean = false,
+    val latitud: Double? = null,
+    val longitud: Double? = null,
+    val esCompletada: Boolean = false
 )

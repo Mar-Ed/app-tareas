@@ -8,4 +8,8 @@
         android:id="@+id/SecondFragment"
         android:icon="@drawable/ic_add"
         android:title="@string/menu_add_task" />
+    <item
+        android:id="@+id/StatsFragment"
+        android:icon="@android:drawable/ic_menu_compass"
+        android:title="Estadísticas" />
 </menu>
