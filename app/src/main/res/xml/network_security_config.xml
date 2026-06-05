@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Configuración de seguridad de red.
+
+    Por defecto, Android bloquea tráfico HTTP sin cifrar (cleartext).
+    Esta configuración permite HTTP solo hacia 10.0.2.2 (localhost del host
+    desde el emulador) para conectarse al servidor Node.js en desarrollo.
+
+    ⚠️ En producción, usar HTTPS y eliminar esta excepción.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>

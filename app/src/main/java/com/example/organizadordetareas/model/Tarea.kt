@@ -12,5 +12,6 @@ data class Tarea(
     val id: Int,
     val titulo: String,
     val descripcion: String,
-    val categoria: String
+    val categoria: String,
+    val esUrgente: Boolean = false
 )
