@@ -56,6 +56,9 @@ dependencies {
     // RecyclerView
     implementation(libs.androidx.recyclerview)
 
+    // Google Maps
+    implementation(libs.play.services.maps)
+
     // Retrofit (HTTP client para REST API)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)

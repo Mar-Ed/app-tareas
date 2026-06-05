@@ -210,7 +210,7 @@
             android:background="?attr/colorSurfaceContainerLowest"/>
 
         <!-- ─────────────────────────────────────────────── -->
-        <!-- Sección Ubicación GPS                           -->
+        <!-- Sección Ubicación GPS y Google Maps             -->
         <!-- ─────────────────────────────────────────────── -->
 
         <com.google.android.material.divider.MaterialDivider
@@ -227,6 +227,22 @@
             android:textAppearance="?attr/textAppearanceTitleSmall"
             android:textColor="?attr/colorOnSurface"
             android:textStyle="bold" />
+
+        <!-- Mapa de Google -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="12dp"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
+
+            <com.google.android.gms.maps.MapView
+                android:id="@+id/map_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_obtener_ubicacion"

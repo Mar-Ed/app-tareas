@@ -21,21 +21,28 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.organizadordetareas.databinding.FragmentFormularioBinding
 import com.example.organizadordetareas.viewmodel.TareaViewModel
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 
 /**
  * Fragment del formulario para crear una nueva tarea.
  *
  * Contiene campos para nombre, descripción, urgencia y categoría.
- * Permite guardar la tarea (vía [TareaViewModel]) y compartir el título por WhatsApp.
+ * Permite guardar la tarea (vía [TareaViewModel]), capturar ubicación GPS y mostrar un mapa de Google.
  */
-class SecondFragment : Fragment() {
+class SecondFragment : Fragment(), OnMapReadyCallback {
 
     // ──────────────────────────────────────────────────────────────
-    // ViewBinding
+    // ViewBinding y Google Maps
     // ──────────────────────────────────────────────────────────────
 
     private var _binding: FragmentFormularioBinding? = null
     private val binding get() = _binding!!
+
+    private var googleMap: GoogleMap? = null
 
     // ──────────────────────────────────────────────────────────────
     // ViewModel compartido con FirstFragment (lista)
@@ -82,16 +89,57 @@ class SecondFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Inicializar el MapView
+        binding.mapView.onCreate(savedInstanceState)
+        binding.mapView.getMapAsync(this)
+
         configurarSonidos()
         configurarScrollDescripcion()
         configurarBotones()
         configurarTecladoSonido()
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        liberarSonidos()
-        _binding = null
+    // ──────────────────────────────────────────────────────────────
+    // Implementación de Google Maps
+    // ──────────────────────────────────────────────────────────────
+
+    override fun onMapReady(map: GoogleMap) {
+        googleMap = map
+        
+        // Coordenadas de Lima, Perú
+        val lima = LatLng(-12.046374, -77.042793)
+        
+        // Posicionar cámara en Lima con un zoom adecuado
+        googleMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(lima, 12f))
+        
+        // Permitir que el usuario seleccione una ubicación tocando el mapa
+        googleMap?.setOnMapClickListener { latLng ->
+            actualizarCoordenadasDesdeMapa(latLng)
+        }
+        
+        // Habilitar capa de ubicación si hay permisos
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            googleMap?.isMyLocationEnabled = true
+        }
+    }
+
+    private fun actualizarCoordenadasDesdeMapa(latLng: LatLng) {
+        latitudCapturada = latLng.latitude
+        longitudCapturada = latLng.longitude
+        
+        // Limpiar marcadores previos y poner uno nuevo
+        googleMap?.clear()
+        googleMap?.addMarker(MarkerOptions().position(latLng).title("Ubicación de la tarea"))
+        
+        // Reproducir sonido al seleccionar en el mapa
+        playClickSound()
+
+        binding.textUbicacion.text = String.format(
+            java.util.Locale.getDefault(),
+            "Latitud: %.6f\nLongitud: %.6f",
+            latitudCapturada,
+            longitudCapturada
+        )
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -183,14 +231,9 @@ class SecondFragment : Fragment() {
     // Lógica de negocio: Compartir por WhatsApp
     // ──────────────────────────────────────────────────────────────
 
-    /**
-     * Crea un [Intent.ACTION_SEND] dirigido a WhatsApp con el título de la tarea.
-     * Si WhatsApp no está instalado, abre el selector de apps del sistema.
-     */
     private fun compartirPorWhatsApp() {
         val nombre = binding.editNombre.text?.toString()?.trim().orEmpty()
 
-        // Validación: necesitamos un nombre para compartir
         if (nombre.isEmpty()) {
             binding.inputLayoutNombre.error = getString(R.string.error_nombre_compartir)
             binding.editNombre.requestFocus()
@@ -198,10 +241,8 @@ class SecondFragment : Fragment() {
         }
 
         binding.inputLayoutNombre.error = null
-
         val textoCompartir = "📋 Tarea: $nombre"
 
-        // Intent específico para WhatsApp
         val whatsappIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, textoCompartir)
@@ -211,7 +252,6 @@ class SecondFragment : Fragment() {
         try {
             startActivity(whatsappIntent)
         } catch (e: ActivityNotFoundException) {
-            // WhatsApp no está instalado → abrir selector genérico
             Toast.makeText(
                 requireContext(),
                 getString(R.string.toast_whatsapp_no_instalado),
@@ -229,20 +269,12 @@ class SecondFragment : Fragment() {
         }
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // Helper: obtener categoría del RadioGroup
-    // ──────────────────────────────────────────────────────────────
-
-    /**
-     * Determina la categoría seleccionada en el RadioGroup.
-     * Retorna el string correspondiente al RadioButton activo.
-     */
     private fun obtenerCategoriaSeleccionada(): String {
         return when (binding.radioGroupCategoria.checkedRadioButtonId) {
             R.id.radio_trabajo -> getString(R.string.categoria_trabajo)
             R.id.radio_personal -> getString(R.string.categoria_personal)
             R.id.radio_estudio -> getString(R.string.categoria_estudio)
-            else -> getString(R.string.categoria_trabajo) // Default
+            else -> getString(R.string.categoria_trabajo)
         }
     }
 
@@ -277,7 +309,7 @@ class SecondFragment : Fragment() {
         val redHabilitada = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 
         if (!gpsHabilitado && !redHabilitada) {
-            Toast.makeText(requireContext(), "GPS y red desactivados. Habilita la ubicación en tu dispositivo.", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), "GPS y red desactivados.", Toast.LENGTH_LONG).show()
             return
         }
 
@@ -287,17 +319,18 @@ class SecondFragment : Fragment() {
         val ultimaUbicacion = locationManager.getLastKnownLocation(proveedor)
         if (ultimaUbicacion != null) {
             actualizarCoordenadas(ultimaUbicacion)
+            moverMapaAUbicacion(ultimaUbicacion.latitude, ultimaUbicacion.longitude)
         }
 
         val locationListener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
                 actualizarCoordenadas(location)
+                moverMapaAUbicacion(location.latitude, location.longitude)
                 locationManager.removeUpdates(this)
             }
-            @Deprecated("Deprecated")
-            override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-            override fun onProviderEnabled(provider: String) {}
-            override fun onProviderDisabled(provider: String) {}
+            override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {}
+            override fun onProviderEnabled(p0: String) {}
+            override fun onProviderDisabled(p0: String) {}
         }
 
         try {
@@ -305,9 +338,7 @@ class SecondFragment : Fragment() {
         } catch (e: Exception) {
             try {
                 locationManager.requestLocationUpdates(proveedor, 0L, 0f, locationListener)
-            } catch (ex: Exception) {
-                Toast.makeText(requireContext(), "Error: ${ex.message}", Toast.LENGTH_SHORT).show()
-            }
+            } catch (ex: Exception) {}
         }
     }
 
@@ -322,9 +353,48 @@ class SecondFragment : Fragment() {
         )
     }
 
+    private fun moverMapaAUbicacion(lat: Double, lng: Double) {
+        val pos = LatLng(lat, lng)
+        googleMap?.clear()
+        googleMap?.addMarker(MarkerOptions().position(pos).title("Tu ubicación actual"))
+        googleMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 15f))
+    }
+
     // ──────────────────────────────────────────────────────────────
-    // Configuración y control de efectos de sonido
+    // Gestión del ciclo de vida del MapView y Sonidos
     // ──────────────────────────────────────────────────────────────
+
+    override fun onResume() {
+        super.onResume()
+        binding.mapView.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        binding.mapView.onPause()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        binding.mapView.onStart()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        binding.mapView.onStop()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding.mapView.onDestroy()
+        liberarSonidos()
+        _binding = null
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        binding.mapView.onLowMemory()
+    }
 
     private fun configurarSonidos() {
         try {
@@ -339,9 +409,7 @@ class SecondFragment : Fragment() {
                 .build()
 
             clickSoundId = soundPool?.load(requireContext(), R.raw.click, 1) ?: 0
-        } catch (e: Exception) {
-            android.util.Log.e("SecondFragment", "Error SoundPool: ${e.message}")
-        }
+        } catch (e: Exception) {}
     }
 
     private fun playClickSound() {
@@ -359,12 +427,10 @@ class SecondFragment : Fragment() {
         val textWatcher = object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // Reproducir sonido de tecla pulsada al escribir
                 playClickSound()
             }
             override fun afterTextChanged(s: android.text.Editable?) {}
         }
-
         binding.editNombre.addTextChangedListener(textWatcher)
         binding.editDescripcion.addTextChangedListener(textWatcher)
     }
