@@ -42,6 +42,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Registro obligatorio del Servicio para la reproducción de música en segundo plano -->
+        <service android:name=".service.MusicService" android:exported="false" />
     </application>
 
 </manifest>

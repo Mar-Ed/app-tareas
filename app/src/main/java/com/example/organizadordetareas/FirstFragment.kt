@@ -50,10 +50,6 @@ class FirstFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Evitar memory leaks — liberar la referencia al reproductor del adapter
-        if (::tareaAdapter.isInitialized) {
-            tareaAdapter.release()
-        }
         _binding = null
     }
 

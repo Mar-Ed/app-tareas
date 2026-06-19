@@ -1,6 +1,7 @@
 package com.example.organizadordetareas
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -9,6 +10,7 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -21,66 +23,32 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.organizadordetareas.databinding.FragmentFormularioBinding
 import com.example.organizadordetareas.viewmodel.TareaViewModel
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
 
-/**
- * Fragment del formulario para crear una nueva tarea.
- *
- * Contiene campos para nombre, descripción, urgencia y categoría.
- * Permite guardar la tarea (vía [TareaViewModel]), capturar ubicación GPS y mostrar un mapa de Google.
- */
-class SecondFragment : Fragment(), OnMapReadyCallback {
-
-    // ──────────────────────────────────────────────────────────────
-    // ViewBinding y Google Maps
-    // ──────────────────────────────────────────────────────────────
+class SecondFragment : Fragment() {
 
     private var _binding: FragmentFormularioBinding? = null
     private val binding get() = _binding!!
 
-    private var googleMap: GoogleMap? = null
-
-    // ──────────────────────────────────────────────────────────────
-    // ViewModel compartido con FirstFragment (lista)
-    // ──────────────────────────────────────────────────────────────
-
     private val viewModel: TareaViewModel by activityViewModels()
 
-    // ──────────────────────────────────────────────────────────────
-    // Estado de ubicación GPS capturada
-    // ──────────────────────────────────────────────────────────────
-    private var latitudCapturada: Double? = null
-    private var longitudCapturada: Double? = null
+    // Manejador de GPS
+    private var locationManager: LocationManager? = null
 
-    // SoundPool para efectos de sonidos rápidos en teclas/botones
-    private var soundPool: android.media.SoundPool? = null
-    private var clickSoundId: Int = 0
-
-    // Launcher para solicitar múltiples permisos de ubicación en tiempo de ejecución
+    // Launcher para pedir permisos de tiempo de ejecución
     private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-        if (fineGranted || coarseGranted) {
-            obtenerUbicacionActual()
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Log.d("LocationDebug", "Permiso concedido por el usuario")
+            obtenerUbicacion()
         } else {
+            Log.d("LocationDebug", "Permiso denegado")
             Toast.makeText(requireContext(), "Permiso de ubicación denegado", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // Lifecycle
-    // ──────────────────────────────────────────────────────────────
-
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentFormularioBinding.inflate(inflater, container, false)
         return binding.root
@@ -89,67 +57,17 @@ class SecondFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Inicializar el MapView
-        binding.mapView.onCreate(savedInstanceState)
-        binding.mapView.getMapAsync(this)
+        locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-        configurarSonidos()
         configurarScrollDescripcion()
         configurarBotones()
-        configurarTecladoSonido()
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // Implementación de Google Maps
-    // ──────────────────────────────────────────────────────────────
-
-    override fun onMapReady(map: GoogleMap) {
-        googleMap = map
-        
-        // Coordenadas de Lima, Perú
-        val lima = LatLng(-12.046374, -77.042793)
-        
-        // Posicionar cámara en Lima con un zoom adecuado
-        googleMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(lima, 12f))
-        
-        // Permitir que el usuario seleccione una ubicación tocando el mapa
-        googleMap?.setOnMapClickListener { latLng ->
-            actualizarCoordenadasDesdeMapa(latLng)
-        }
-        
-        // Habilitar capa de ubicación si hay permisos
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            googleMap?.isMyLocationEnabled = true
-        }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
-    private fun actualizarCoordenadasDesdeMapa(latLng: LatLng) {
-        latitudCapturada = latLng.latitude
-        longitudCapturada = latLng.longitude
-        
-        // Limpiar marcadores previos y poner uno nuevo
-        googleMap?.clear()
-        googleMap?.addMarker(MarkerOptions().position(latLng).title("Ubicación de la tarea"))
-        
-        // Reproducir sonido al seleccionar en el mapa
-        playClickSound()
-
-        binding.textUbicacion.text = String.format(
-            java.util.Locale.getDefault(),
-            "Latitud: %.6f\nLongitud: %.6f",
-            latitudCapturada,
-            longitudCapturada
-        )
-    }
-
-    // ──────────────────────────────────────────────────────────────
-    // Configuración de scroll en el campo de descripción
-    // ──────────────────────────────────────────────────────────────
-
-    /**
-     * Permite scroll vertical independiente dentro del EditText de descripción,
-     * sin que el ScrollView padre intercepte los toques.
-     */
     private fun configurarScrollDescripcion() {
         binding.editDescripcion.setOnTouchListener { view, event ->
             if (view.hasFocus()) {
@@ -162,59 +80,96 @@ class SecondFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // Configuración de botones
-    // ──────────────────────────────────────────────────────────────
-
     private fun configurarBotones() {
         binding.btnGuardar.setOnClickListener {
-            playClickSound()
             guardarTarea()
         }
 
         binding.btnCompartir.setOnClickListener {
-            playClickSound()
             compartirPorWhatsApp()
         }
 
         binding.btnObtenerUbicacion.setOnClickListener {
-            playClickSound()
-            verificarPermisosYCapturarUbicacion()
+            solicitarPermisoUbicacion()
         }
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // Lógica de negocio: Guardar tarea
-    // ──────────────────────────────────────────────────────────────
+    private fun solicitarPermisoUbicacion() {
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                Log.d("LocationDebug", "Permiso ya estaba concedido")
+                // Ya tenemos permiso, obtenemos la ubicación
+                obtenerUbicacion()
+            }
+            else -> {
+                Log.d("LocationDebug", "Solicitando permiso al usuario")
+                // Pedimos el permiso en tiempo de ejecución
+                requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
+    }
 
-    /**
-     * Valida los campos del formulario y, si son correctos,
-     * agrega la tarea al [TareaViewModel] y navega de vuelta a la lista.
-     */
+    @SuppressLint("MissingPermission") // Ya verificamos el permiso antes de llamar a esto
+    private fun obtenerUbicacion() {
+        binding.textUbicacion.text = "Obteniendo ubicación..."
+        Toast.makeText(requireContext(), "Buscando GPS...", Toast.LENGTH_SHORT).show()
+
+        val locationListener = object : LocationListener {
+            override fun onLocationChanged(location: Location) {
+                Log.d("LocationDebug", "Ubicación obtenida: ${location.latitude}, ${location.longitude}")
+                val coord = "Lat: ${location.latitude}, Lon: ${location.longitude}"
+                binding.textUbicacion.text = coord
+                
+                // Detenemos las actualizaciones para ahorrar batería
+                locationManager?.removeUpdates(this)
+            }
+            override fun onProviderEnabled(provider: String) {}
+            override fun onProviderDisabled(provider: String) {}
+            override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+        }
+
+        try {
+            // Requerimos actualizaciones del GPS o Red
+            locationManager?.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER,
+                0L,
+                0f,
+                locationListener
+            )
+            locationManager?.requestLocationUpdates(
+                LocationManager.NETWORK_PROVIDER,
+                0L,
+                0f,
+                locationListener
+            )
+        } catch (e: Exception) {
+            Log.e("LocationDebug", "Error al obtener ubicación", e)
+            binding.textUbicacion.text = "Error al obtener GPS"
+        }
+    }
+
     private fun guardarTarea() {
         val nombre = binding.editNombre.text?.toString()?.trim().orEmpty()
         val descripcion = binding.editDescripcion.text?.toString()?.trim().orEmpty()
         val esUrgente = binding.checkUrgente.isChecked
         val categoria = obtenerCategoriaSeleccionada()
 
-        // Validación: nombre obligatorio
         if (nombre.isEmpty()) {
             binding.inputLayoutNombre.error = getString(R.string.error_nombre_vacio)
             binding.editNombre.requestFocus()
             return
         }
 
-        // Limpiar error previo
         binding.inputLayoutNombre.error = null
 
-        // Agregar tarea al ViewModel (Single Source of Truth)
         viewModel.agregarTarea(
             titulo = nombre,
             descripcion = descripcion,
             categoria = categoria,
-            esUrgente = esUrgente,
-            latitud = latitudCapturada,
-            longitud = longitudCapturada
+            esUrgente = esUrgente
         )
 
         Toast.makeText(
@@ -223,13 +178,8 @@ class SecondFragment : Fragment(), OnMapReadyCallback {
             Toast.LENGTH_SHORT
         ).show()
 
-        // Navegar de vuelta a la lista de tareas
         findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
     }
-
-    // ──────────────────────────────────────────────────────────────
-    // Lógica de negocio: Compartir por WhatsApp
-    // ──────────────────────────────────────────────────────────────
 
     private fun compartirPorWhatsApp() {
         val nombre = binding.editNombre.text?.toString()?.trim().orEmpty()
@@ -241,6 +191,7 @@ class SecondFragment : Fragment(), OnMapReadyCallback {
         }
 
         binding.inputLayoutNombre.error = null
+
         val textoCompartir = "📋 Tarea: $nombre"
 
         val whatsappIntent = Intent(Intent.ACTION_SEND).apply {
@@ -276,162 +227,5 @@ class SecondFragment : Fragment(), OnMapReadyCallback {
             R.id.radio_estudio -> getString(R.string.categoria_estudio)
             else -> getString(R.string.categoria_trabajo)
         }
-    }
-
-    // ──────────────────────────────────────────────────────────────
-    // Gestión de GPS y ubicación
-    // ──────────────────────────────────────────────────────────────
-
-    private fun verificarPermisosYCapturarUbicacion() {
-        val finePerm = Manifest.permission.ACCESS_FINE_LOCATION
-        val coarsePerm = Manifest.permission.ACCESS_COARSE_LOCATION
-
-        val hasFine = ContextCompat.checkSelfPermission(requireContext(), finePerm) == PackageManager.PERMISSION_GRANTED
-        val hasCoarse = ContextCompat.checkSelfPermission(requireContext(), coarsePerm) == PackageManager.PERMISSION_GRANTED
-
-        if (hasFine || hasCoarse) {
-            obtenerUbicacionActual()
-        } else {
-            requestPermissionLauncher.launch(arrayOf(finePerm, coarsePerm))
-        }
-    }
-
-    private fun obtenerUbicacionActual() {
-        val locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-
-        val gpsHabilitado = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        val redHabilitada = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-
-        if (!gpsHabilitado && !redHabilitada) {
-            Toast.makeText(requireContext(), "GPS y red desactivados.", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        val proveedor = if (gpsHabilitado) LocationManager.GPS_PROVIDER else LocationManager.NETWORK_PROVIDER
-        Toast.makeText(requireContext(), "Obteniendo ubicación...", Toast.LENGTH_SHORT).show()
-
-        val ultimaUbicacion = locationManager.getLastKnownLocation(proveedor)
-        if (ultimaUbicacion != null) {
-            actualizarCoordenadas(ultimaUbicacion)
-            moverMapaAUbicacion(ultimaUbicacion.latitude, ultimaUbicacion.longitude)
-        }
-
-        val locationListener = object : LocationListener {
-            override fun onLocationChanged(location: Location) {
-                actualizarCoordenadas(location)
-                moverMapaAUbicacion(location.latitude, location.longitude)
-                locationManager.removeUpdates(this)
-            }
-            override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {}
-            override fun onProviderEnabled(p0: String) {}
-            override fun onProviderDisabled(p0: String) {}
-        }
-
-        try {
-            locationManager.requestSingleUpdate(proveedor, locationListener, null)
-        } catch (e: Exception) {
-            try {
-                locationManager.requestLocationUpdates(proveedor, 0L, 0f, locationListener)
-            } catch (ex: Exception) {}
-        }
-    }
-
-    private fun actualizarCoordenadas(location: Location) {
-        latitudCapturada = location.latitude
-        longitudCapturada = location.longitude
-        binding.textUbicacion.text = String.format(
-            java.util.Locale.getDefault(),
-            "Latitud: %.6f\nLongitud: %.6f",
-            latitudCapturada,
-            longitudCapturada
-        )
-    }
-
-    private fun moverMapaAUbicacion(lat: Double, lng: Double) {
-        val pos = LatLng(lat, lng)
-        googleMap?.clear()
-        googleMap?.addMarker(MarkerOptions().position(pos).title("Tu ubicación actual"))
-        googleMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 15f))
-    }
-
-    // ──────────────────────────────────────────────────────────────
-    // Gestión del ciclo de vida del MapView y Sonidos
-    // ──────────────────────────────────────────────────────────────
-
-    override fun onResume() {
-        super.onResume()
-        binding.mapView.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        binding.mapView.onPause()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        binding.mapView.onStart()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        binding.mapView.onStop()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        binding.mapView.onDestroy()
-        liberarSonidos()
-        _binding = null
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        binding.mapView.onLowMemory()
-    }
-
-    private fun configurarSonidos() {
-        try {
-            val audioAttributes = android.media.AudioAttributes.Builder()
-                .setUsage(android.media.AudioAttributes.USAGE_ASSISTANT)
-                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build()
-
-            soundPool = android.media.SoundPool.Builder()
-                .setMaxStreams(5)
-                .setAudioAttributes(audioAttributes)
-                .build()
-
-            clickSoundId = soundPool?.load(requireContext(), R.raw.click, 1) ?: 0
-        } catch (e: Exception) {}
-    }
-
-    private fun playClickSound() {
-        if (clickSoundId != 0) {
-            soundPool?.play(clickSoundId, 0.4f, 0.4f, 1, 0, 1.0f)
-        }
-    }
-
-    private fun liberarSonidos() {
-        soundPool?.release()
-        soundPool = null
-    }
-
-    private fun configurarTecladoSonido() {
-        val textWatcher = object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                playClickSound()
-            }
-            override fun afterTextChanged(s: android.text.Editable?) {}
-        }
-        binding.editNombre.addTextChangedListener(textWatcher)
-        binding.editDescripcion.addTextChangedListener(textWatcher)
     }
 }

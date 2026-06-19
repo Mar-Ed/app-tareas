@@ -42,36 +42,6 @@
             android:layout_marginBottom="8dp" />
 
         <!-- ─────────────────────────────────────────────── -->
-        <!-- Ejemplo de Scroll Horizontal (Niveles de prioridad) -->
-        <!-- ─────────────────────────────────────────────── -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/label_prioridad_rapida"
-            android:textAppearance="?attr/textAppearanceTitleSmall"
-            android:layout_marginTop="8dp"
-            android:textColor="?attr/colorOnSurfaceVariant"/>
-
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:scrollbars="horizontal">
-            <LinearLayout
-                android:id="@+id/layout_prioridades"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingBottom="8dp">
-                <Button android:id="@+id/btn_prio_baja" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/prio_baja" android:layout_margin="4dp"/>
-                <Button android:id="@+id/btn_prio_media" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/prio_media" android:layout_margin="4dp"/>
-                <Button android:id="@+id/btn_prio_alta" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/prio_alta" android:layout_margin="4dp"/>
-                <Button android:id="@+id/btn_prio_urgente" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/prio_urgente" android:layout_margin="4dp"/>
-                <Button android:id="@+id/btn_prio_critica" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/prio_critica" android:layout_margin="4dp"/>
-            </LinearLayout>
-        </HorizontalScrollView>
-
-        <!-- ─────────────────────────────────────────────── -->
         <!-- Campo: Nombre de la tarea                       -->
         <!-- ─────────────────────────────────────────────── -->
 
@@ -82,7 +52,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:hint="@string/hint_nombre"
-            app:startIconDrawable="@drawable/ic_tasks"
             app:counterEnabled="true"
             app:counterMaxLength="60"
             app:errorEnabled="true">
@@ -190,85 +159,50 @@
         </RadioGroup>
 
         <!-- ─────────────────────────────────────────────── -->
-        <!-- Ejemplo de ListView (Sugerencias)               -->
-        <!-- ─────────────────────────────────────────────── -->
-        <TextView
+        <com.google.android.material.divider.MaterialDivider
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/label_sugerencias"
-            android:textAppearance="?attr/textAppearanceTitleSmall"
-            android:layout_marginTop="20dp"
-            android:textColor="?attr/colorOnSurfaceVariant"/>
+            android:layout_marginVertical="16dp" />
 
-        <ListView
-            android:id="@+id/list_sugerencias"
+        <!-- Hardware y Sensores (Ubicación GPS) empleando LinearLayout -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:layout_marginTop="8dp"
-            android:divider="?attr/colorOutlineVariant"
-            android:dividerHeight="1dp"
-            android:background="?attr/colorSurfaceContainerLowest"/>
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp"
+            android:background="?attr/colorSurfaceVariant"
+            android:padding="16dp">
 
-        <!-- ─────────────────────────────────────────────── -->
-        <!-- Sección Ubicación GPS y Google Maps             -->
-        <!-- ─────────────────────────────────────────────── -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ubicación GPS"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/text_ubicacion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ubicación desconocida"
+                android:layout_marginTop="8dp"
+                android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+            <Button
+                android:id="@+id/btn_obtener_ubicacion"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Obtener Ubicación" />
+        </LinearLayout>
 
         <com.google.android.material.divider.MaterialDivider
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginVertical="16dp" />
 
-        <TextView
-            android:id="@+id/text_label_ubicacion"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/label_ubicacion_gps"
-            android:textAppearance="?attr/textAppearanceTitleSmall"
-            android:textColor="?attr/colorOnSurface"
-            android:textStyle="bold" />
-
-        <!-- Mapa de Google -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_marginTop="12dp"
-            app:cardCornerRadius="12dp"
-            app:strokeColor="?attr/colorOutlineVariant"
-            app:strokeWidth="1dp">
-
-            <com.google.android.gms.maps.MapView
-                android:id="@+id/map_view"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_obtener_ubicacion"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="10dp"
-            android:text="@string/btn_obtener_ubicacion"
-            android:textAllCaps="false"
-            app:cornerRadius="12dp"
-            app:icon="@android:drawable/ic_menu_mylocation"
-            app:iconGravity="textStart" />
-
-        <TextView
-            android:id="@+id/text_ubicacion"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/sin_ubicacion"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:gravity="center"
-            android:padding="8dp" />
-
-        <!-- ─────────────────────────────────────────────── -->
-        <!-- Botones de acción                               -->
+        <!-- Botones de Acción -->                              
         <!-- ─────────────────────────────────────────────── -->
 
         <com.google.android.material.button.MaterialButton
