@@ -57,10 +57,22 @@ class FirstFragment : Fragment() {
      * Inicializa el RecyclerView, su adaptador y el ItemTouchHelper para borrar por deslizamiento.
      */
     private fun configurarRecyclerView() {
-        tareaAdapter = TareaAdapter { tarea ->
-            // Al hacer clic, alternamos el estado de completado en el ViewModel
-            viewModel.toggleTareaCompletada(tarea.id)
-        }
+        tareaAdapter = TareaAdapter(
+            onTareaClick = { tarea ->
+                // Al hacer clic, alternamos el estado de completado en el ViewModel
+                viewModel.toggleTareaCompletada(tarea.id)
+            },
+            onDeleteClick = { tarea ->
+                // Al elegir borrar desde el menú contextual o botón
+                val position = tareaAdapter.currentList.indexOf(tarea)
+                viewModel.eliminarTarea(tarea.id)
+                Snackbar.make(binding.root, "Tarea eliminada: ${tarea.titulo}", Snackbar.LENGTH_LONG)
+                    .setAction("Deshacer") {
+                        viewModel.restaurarTarea(tarea, position)
+                    }
+                    .show()
+            }
+        )
 
         binding.recyclerTareas.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -103,7 +115,10 @@ class FirstFragment : Fragment() {
      * Configura el listener del ChipGroup para filtrar las tareas dinámicamente.
      */
     private fun configurarFiltros() {
-        binding.chipGroupFiltro.setOnCheckedStateChangeListener { _, checkedIds ->
+        binding.chipGroupFiltro.setOnCheckedStateChangeListener { group, checkedIds ->
+            // Sonido al cambiar de filtro
+            group.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+
             val checkedId = checkedIds.firstOrNull()
             filtroActual = when (checkedId) {
                 R.id.chip_trabajo -> "Trabajo"

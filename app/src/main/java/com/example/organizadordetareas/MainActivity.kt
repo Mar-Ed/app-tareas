@@ -48,11 +48,14 @@ class MainActivity : AppCompatActivity() {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         
-        binding.bottomNavigation.setupWithNavController(navController)
-        binding.navView.setupWithNavController(navController)
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            binding.bottomNavigation.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+            androidx.navigation.ui.NavigationUI.onNavDestinationSelected(item, navController)
+            true
+        }
 
-        // Configurar acciones manuales del Navigation Drawer (Servicio de Música)
         binding.navView.setNavigationItemSelectedListener { menuItem ->
+            binding.navView.playSoundEffect(android.view.SoundEffectConstants.CLICK)
             when (menuItem.itemId) {
                 R.id.nav_music_play -> {
                     // Iniciar el servicio explícitamente
@@ -63,6 +66,9 @@ class MainActivity : AppCompatActivity() {
                     // Interrumpir/detener el servicio explícitamente
                     val intent = Intent(this, MusicService::class.java)
                     stopService(intent)
+                }
+                else -> {
+                    androidx.navigation.ui.NavigationUI.onNavDestinationSelected(menuItem, navController)
                 }
             }
             binding.drawerLayout.closeDrawers()

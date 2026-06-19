@@ -72,10 +72,24 @@
             android:id="@+id/check_completada"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="4dp"
+            app:layout_constraintEnd_toStartOf="@id/btn_eliminar"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:contentDescription="Marcar tarea como completada" />
+
+        <!-- Botón de Eliminar -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_eliminar"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            app:icon="@android:drawable/ic_menu_delete"
+            app:iconTint="?attr/colorError"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:contentDescription="Eliminar tarea" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

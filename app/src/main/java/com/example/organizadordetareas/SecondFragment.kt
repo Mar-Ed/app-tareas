@@ -82,14 +82,17 @@ class SecondFragment : Fragment() {
 
     private fun configurarBotones() {
         binding.btnGuardar.setOnClickListener {
+            it.playSoundEffect(android.view.SoundEffectConstants.CLICK)
             guardarTarea()
         }
 
         binding.btnCompartir.setOnClickListener {
+            it.playSoundEffect(android.view.SoundEffectConstants.CLICK)
             compartirPorWhatsApp()
         }
 
         binding.btnObtenerUbicacion.setOnClickListener {
+            it.playSoundEffect(android.view.SoundEffectConstants.CLICK)
             solicitarPermisoUbicacion()
         }
     }

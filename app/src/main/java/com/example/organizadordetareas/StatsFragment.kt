@@ -119,6 +119,10 @@ class StatsFragment : Fragment() {
                     tarea.longitud
                 )
 
+                itemView.setOnClickListener {
+                    it.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+                }
+
                 binding.layoutLocalizedTasks.addView(itemView)
             }
         }

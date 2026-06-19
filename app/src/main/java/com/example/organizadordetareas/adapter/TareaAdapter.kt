@@ -16,7 +16,8 @@ import com.example.organizadordetareas.model.Tarea
  * Usa [ListAdapter] y [DiffUtil] para animaciones eficientes.
  */
 class TareaAdapter(
-    private val onTareaClick: (Tarea) -> Unit
+    private val onTareaClick: (Tarea) -> Unit,
+    private val onDeleteClick: (Tarea) -> Unit
 ) : ListAdapter<Tarea, TareaAdapter.TareaViewHolder>(TareaDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TareaViewHolder {
@@ -35,27 +36,43 @@ class TareaAdapter(
             binding.textTitulo.text = tarea.titulo
             binding.textDescripcion.text = tarea.descripcion
             binding.textCategoria.text = "Categoría: ${tarea.categoria}"
+            binding.checkCompletada.isChecked = tarea.esCompletada
 
-            // Evento Click normal
+            // Evento Click normal en la tarjeta
             binding.root.setOnClickListener {
+                it.playSoundEffect(android.view.SoundEffectConstants.CLICK)
                 onTareaClick(tarea)
+            }
+
+            // Click en el Checkbox
+            binding.checkCompletada.setOnClickListener {
+                it.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+                onTareaClick(tarea)
+            }
+
+            // Click en el botón eliminar
+            binding.btnEliminar.setOnClickListener {
+                it.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+                onDeleteClick(tarea)
             }
 
             // Evento Long Click -> Menú Contextual / Popup
             binding.root.setOnLongClickListener { view ->
+                view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
                 val popup = PopupMenu(view.context, view)
                 // Creando menú emergente dinámicamente
                 popup.menu.add(0, 1, 0, "Borrar Tarea")
                 popup.menu.add(0, 2, 0, "Marcar como Completada")
                 
                 popup.setOnMenuItemClickListener { menuItem ->
+                    view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
                     when (menuItem.itemId) {
                         1 -> {
-                            Toast.makeText(view.context, "Borrando: ${tarea.titulo}", Toast.LENGTH_SHORT).show()
+                            onDeleteClick(tarea)
                             true
                         }
                         2 -> {
-                            Toast.makeText(view.context, "Completada: ${tarea.titulo}", Toast.LENGTH_SHORT).show()
+                            onTareaClick(tarea)
                             true
                         }
                         else -> false
